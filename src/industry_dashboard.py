@@ -24,8 +24,10 @@ def show_industry(data, as_of):
     cutoff = st.date_input("Industry research publication cutoff", SNAPSHOT, min_value=date(2024, 9, 1))
     if mode == "Upload CSV":
         st.code(",".join(FIELDS), language="text")
-        upload = st.file_uploader("Research CSV", type="csv", max_upload_size=1)
+        upload = st.file_uploader("Research CSV", type="csv")
         try:
+            if upload and upload.size > 1_000_000:
+                raise ValueError("Upload a research CSV no larger than 1 MB.")
             rows = csv_observations(upload.getvalue().decode("utf-8-sig").splitlines(), cutoff) if upload else []
         except ValueError as error:
             st.error(str(error))

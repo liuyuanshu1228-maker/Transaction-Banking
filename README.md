@@ -47,6 +47,18 @@ The China Summer Analyst role emphasizes market research, macroeconomic analysis
 - [Product commercialisation case](docs/product_commercialisation_case.md) evaluates a marketplace collections pilot from client and provider perspectives.
 - [English client proposal](reports/client_product_proposal.pptx) is a separate, editable three-slide PowerPoint. The original treasury reports remain part of the portfolio.
 
+## Bank of America GPS relevance
+
+The portfolio demonstrates transferable work in treasury advisory, payments, working capital and commercial analysis. It is an independent educational project. [Bank of America Global Payments Solutions](https://careers.bankofamerica.com/en-us/company/organization/global-payments-solutions)
+
+- **Research.** Inspect dated Federal Reserve observations or import a provenance-tagged rates and FX CSV. Compare published data with the synthetic company's open exposures and cash sensitivities.
+- **Advisory.** Trace a recommendation to a seeded client cohort, a payment KPI or a stress gap. Export a seven-slide editable proposal for the selected case.
+- **Commercial analysis.** Compare client cost savings and provider contribution independently, then stress adoption before discussing payback.
+
+[Industry research brief](reports/industry_research_brief.md) · [Client treasury proposal](reports/client_treasury_proposal.pptx) · [Commercial case](reports/commercial_opportunity.md) · [Methodology](docs/gps_client_methodology.md) · [Three-minute walkthrough](docs/gps_demo.md) · [CV suggestions](docs/gps_cv.md)
+
+AI assistance was used for coding, drafting and test development. The repository records reproducible inputs and executable checks.
+
 ## Dashboard
 
 | Section | What to inspect |
@@ -58,6 +70,9 @@ The China Summer Analyst role emphasizes market research, macroeconomic analysis
 | Business Recommendations | Client executive summary for liquidity, collections, payment routing and cost, with evidence and decision limits |
 | Market Intelligence | Dated public evidence and separate 30-day sensitivity for rates, FX quotes, spreads and collection delays |
 | Client & Product Strategy | Compare three fictional segments and standalone offers using first-year fees, client value and cost to serve |
+| Market & Industry Intelligence | Review the fictional company's cash and currency exposures, official data provenance and market sensitivities |
+| Client Solutions | Compare seeded payment and liquidity evidence for three clients and export a tailored proposal |
+| Commercial Opportunity | Compare client costs and provider economics under configurable prices, costs and adoption |
 
 Open the Scenario Lab and increase receipt delay. The comparison shows exactly which receipts move and the effect on daily cash. For a specific account, read the local currency columns, then use the USD columns for group comparison.
 
@@ -82,6 +97,16 @@ Open the Scenario Lab and increase receipt delay. The comparison shows exactly w
 
 Report generation writes the two sample filenames under `reports/`. Use `--output` to keep a separate snapshot. The suite covers reproducibility, SQLite constraints, settlement accounting, FX, transfers, forecast leakage, scenario shocks, Streamlit interactions and Office output contents.
 
+## Reproduce the GPS deliverables
+
+```powershell
+.\.venv\Scripts\python.exe -m src.industry_research
+.\.venv\Scripts\python.exe -m src.client_treasury_proposal
+.\.venv\Scripts\python.exe -m src.commercial_opportunity
+```
+
+Use the three new pages with the default 29 July 2025 synthetic ledger date. The research cutoff is independent of the ledger date. In Client Solutions, change segments and download the current proposal. In Commercial Opportunity, change adoption and compare provider contribution against client savings. To capture screenshots, run the app locally, reset the controls to their defaults, and capture the main pane with the disclosure and units visible. Use only the sample data for portfolio screenshots.
+
 ## Architecture
 
 ```text
@@ -94,6 +119,9 @@ src/market_intelligence.py + src/product_strategy.py
     -> market and product dashboards + src/product_proposal.py
 src/virtual_accounts.py + src/settlement.py + src/controls.py
     -> standalone product demonstrations using historical source data
+src/industry_research.py + src/client_solutions.py + src/commercial_opportunity.py
+    -> industry brief, client proposal and commercial case
+    -> dedicated Streamlit pages with shared treasury calculations
 ```
 
 The ledger stores integer cents and FX conversion uses Decimal with half-up cent rounding. Realized settlement and reporting translations use dated midpoints. The forecast starts from historical closing cash and uses only schedules known as of that close. Account buffers use local currency. The group rollup translates each position to USD before summation.
