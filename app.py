@@ -10,6 +10,7 @@ from src.forecasting import compare, forecast
 from src.payments import payment_metrics, payment_rows
 from src.recommendations import recommendations
 from src.scenarios import CONSERVATIVE, Scenario
+from src.settlement import compare_settlement
 from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
@@ -100,6 +101,28 @@ def main():
                 "receipt_sgd": st.column_config.NumberColumn("Receipt (SGD)", format="%.2f"),
             })
             st.caption("Record and value rates exclude repeat feed records. Unique unmatched and missing references remain posted but unattributed.")
+
+        with st.expander("Hypothetical settlement comparison"):
+            st.caption("Illustrative input assumptions only. These methods do not represent bank rails or service levels.")
+            currency = st.selectbox("Instruction currency", ["SGD", "USD"])
+            amount = st.number_input(f"Outgoing principal ({currency})", min_value=1, max_value=10_000_000,
+                                     value=200_000, step=1000)
+            comparison = compare_settlement(data, as_of, amount * 100, currency, balances=balances)
+            st.dataframe([{"Method": row["method"], "Settlement (minutes)": row["delay_min"],
+                           "Principal (SGD)": row["principal_minor"] / 100,
+                           "Flat fee (SGD)": row["fee_minor"] / 100, "FX spread (bp)": row["spread_bps"],
+                           "FX cost (SGD)": row["spread_minor"] / 100,
+                           "Opening cash (SGD)": row["opening_minor"] / 100,
+                           "Cash after settlement (SGD)": row["ending_minor"] / 100,
+                           "Buffer shortfall (SGD)": row["shortfall_minor"] / 100}
+                          for row in comparison], hide_index=True)
+            events = pd.DataFrame([{"Minute after instruction": event["minute"],
+                                    "Available cash (SGD)": event["balance_minor"] / 100, "Method": row["method"]}
+                                   for row in comparison for event in row["timeline"]])
+            st.plotly_chart(px.line(events, x="Minute after instruction", y="Available cash (SGD)", color="Method",
+                                    line_shape="hv", color_discrete_sequence=COLORS), width="stretch")
+            st.caption("Both cases use the same SGD opening cash and reporting-date FX midpoint. Cash is debited at settlement. "
+                       "The comparison excludes other flows, holds and payment-routing eligibility.")
 
         begin = finish = as_of
         if as_of != START:
