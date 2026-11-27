@@ -1,12 +1,15 @@
 # Data dictionary
 
-All dates use ISO 8601 calendar days. Monetary fields ending in minor store integer cents in the stated currency. FX rates store USD per unit of local currency multiplied by one million.
+The SQLite generator creates each table below. ISO dates use calendar-day granularity. Monetary fields ending in `_minor` store signed or unsigned integer cents as appropriate. Excel exports show major units. Group-valued fields carry the USD label.
 
-| Table | Grain | Purpose |
+| Table | Primary key | Fields and accounting meaning |
 | --- | --- | --- |
-| accounts | Account ID | Booking region, currency, opening balance and minimum buffer |
-| fx | Date and currency | Dated synthetic mid-market conversion to USD |
-| payments | Instruction ID | Booking account, instruction amount and currency, destination, outcome and outcome date |
-| cashflows | Receipt ID | Historical external cash receipts in account currency |
-| scheduled | Schedule ID | Due date, first known date, cash flow type, currency and amount |
-| transfers | Transfer ID | Same-day movement between two accounts, principal in source currency |
+| `accounts` | `id` | Booking `region`, local `currency`, `opening_minor` before the historical period, `buffer_minor` in local currency |
+| `fx` | `day, currency` | `usd_ppm` is USD per currency unit multiplied by 1,000,000 |
+| `payments` | `id` | Booking `account`, `instructed` date, instruction `currency` and `principal_minor`, destination region, `status` and nullable `outcome_day` |
+| `cashflows` | `id` | `account`, posting `day`, external receipt `amount_minor` in account currency |
+| `scheduled` | `id` | `account`, earliest `known_on` date, planned `due_on` date, receipt or supplier `kind`, instruction `currency` and positive `amount_minor` |
+| `transfers` | `id` | Posting `day`, `source` and `target` account IDs, `amount_minor` in source currency |
+| `daily_balances` | `day, account` | Materialized history with local opening, inflow, outflow, fees, both transfer legs, closing and buffer, plus translated closing USD |
+
+The app recomputes balances from source tables so the ledger and payment visibility use the selected as-of date. Payment detail adds corridor, local settled principal, fee components, dated USD equivalents and elapsed days. Scenario comparison includes expected movement components and scenario-minus-expected closing deltas in local currency and USD.
