@@ -62,7 +62,8 @@ def observations_summary(rows):
     return summary
 
 
-def sensitivity(data, as_of, fx_bps, rate_bps, *, receipt_delay=0, debt_minor=100_000_000, savings_minor=50_000_000):
+def sensitivity(data, as_of, fx_bps, rate_bps, *, receipt_delay=0, spread_shock_bps=0,
+                debt_minor=100_000_000, savings_minor=50_000_000):
     """Use synthetic forecast flows and reprice distinct USD debt and cash notionals."""
     as_of = str(date.fromisoformat(str(as_of)))
     if set(fx_bps) - set(FX_CURRENCIES) or any(type(v) is not int or not -9999 <= v <= 10_000
@@ -72,6 +73,8 @@ def sensitivity(data, as_of, fx_bps, rate_bps, *, receipt_delay=0, debt_minor=10
         raise ValueError("Use integer basis points and nonnegative integer USD cent notionals.")
     if type(receipt_delay) is not int or not 0 <= receipt_delay <= HORIZON:
         raise ValueError("Receipt delay must be 0 to 30 calendar days.")
+    if type(spread_shock_bps) is not int or not 0 <= spread_shock_bps <= 1000:
+        raise ValueError("Additional FX spread must be 0 to 1,000 basis points.")
     base_rates = rate_index(data["fx"])
     stressed = dict(base_rates)
     for currency, shift in fx_bps.items():
@@ -92,7 +95,7 @@ def sensitivity(data, as_of, fx_bps, rate_bps, *, receipt_delay=0, debt_minor=10
                     peak_funding_minor=max(daily_gaps.values()), fx_cost_minor=fx_cost)
 
     baseline = measure(base_rates, BASELINE)
-    scenario = measure(stressed, Scenario(receipt_delay=receipt_delay))
+    scenario = measure(stressed, Scenario(receipt_delay=receipt_delay, spread_bps=spread_shock_bps))
     incremental = rounded(Decimal(savings_minor - debt_minor) * rate_bps * HORIZON / 3_650_000)
     scenario["day30_cash_minor"] += incremental
     return baseline, scenario, incremental

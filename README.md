@@ -39,6 +39,14 @@ The dashboard also runs from a deterministic in-memory SQLite database when the 
 
 The [alignment review](docs/gps_alignment.md) maps the project to payment operations, liquidity, product fit and client communication. The portfolio uses synthetic records and illustrative pricing and service-time assumptions.
 
+## Citi Services portfolio extension
+
+The China Summer Analyst role emphasizes market research, macroeconomic analysis, client opportunities and product commercialisation. The two new pages exercise those responsibilities through a dated market brief and a fictional go-to-market case. [Citi role description](https://jobs.citi.com/job/shanghai/services-summer-analyst-china-2027/287/102161042768)
+
+- [Market Intelligence Brief](docs/market_intelligence_brief.md) covers selected Fed and H.10 observations plus FSB wholesale payment evidence.
+- [Product commercialisation case](docs/product_commercialisation_case.md) evaluates a marketplace collections pilot from client and provider perspectives.
+- [English client proposal](reports/client_product_proposal.pptx) is a separate, editable three-slide PowerPoint. The original treasury reports remain part of the portfolio.
+
 ## Dashboard
 
 | Section | What to inspect |
@@ -48,6 +56,8 @@ The [alignment review](docs/gps_alignment.md) maps the project to payment operat
 | Liquidity Forecast | Expected and conservative paths plus day-level account shortfalls and movement detail |
 | Scenario Lab | Receipt and supplier delays, an account-specific expense, additional bank fees and FX spread shock |
 | Business Recommendations | Client executive summary for liquidity, collections, payment routing and cost, with evidence and decision limits |
+| Market Intelligence | Dated public evidence and separate 30-day sensitivity for rates, FX quotes, spreads and collection delays |
+| Client & Product Strategy | Compare three fictional segments and standalone offers using first-year fees, client value and cost to serve |
 
 Open the Scenario Lab and increase receipt delay. The comparison shows exactly which receipts move and the effect on daily cash. For a specific account, read the local currency columns, then use the USD columns for group comparison.
 
@@ -65,6 +75,7 @@ Open the Scenario Lab and increase receipt delay. The comparison shows exactly w
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.reporting --database data/synthetic/treasury.sqlite
+.\.venv\Scripts\python.exe -m src.product_proposal
 .\.venv\Scripts\python.exe -m compileall -q app.py src tests
 .\.venv\Scripts\python.exe -m pytest -q
 ```
@@ -79,6 +90,8 @@ src/data_generation.py + src/database.py
     -> src/payments.py + src/treasury.py
     -> src/forecasting.py + src/scenarios.py + src/recommendations.py
     -> app.py (Streamlit) + src/reporting.py (Excel and PowerPoint)
+src/market_intelligence.py + src/product_strategy.py
+    -> market and product dashboards + src/product_proposal.py
 src/virtual_accounts.py + src/settlement.py + src/controls.py
     -> standalone product demonstrations using historical source data
 ```

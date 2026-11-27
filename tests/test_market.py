@@ -43,6 +43,8 @@ def test_quote_direction_and_spread_cost_use_local_principal():
     base, stress, _ = sensitivity(data, "2025-01-01", {"SGD": 1000}, 0)
     assert base == dict(day30_cash_minor=39057, peak_funding_minor=5943, fx_cost_minor=35)
     assert stress == dict(day30_cash_minor=34593, peak_funding_minor=6316, fx_cost_minor=35)
+    _, wider, _ = sensitivity(data, "2025-01-01", {}, 0, spread_shock_bps=50)
+    assert wider == dict(day30_cash_minor=39007, peak_funding_minor=5993, fx_cost_minor=85)
 
 
 @pytest.mark.parametrize("shift", [{"GBP": 50}, {"SGD": -10000}, {"CNY": 1.5}])

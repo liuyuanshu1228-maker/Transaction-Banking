@@ -86,20 +86,22 @@ def show_control_review(receipts, as_of):
 
 def main():
     st.set_page_config(page_title="Corporate Treasury Analytics", layout="wide")
-    st.caption("Synthetic Data — Educational Portfolio Demonstration")
     st.title("Corporate Cash & Cross-Border Payments Analytics")
-    revision = DEFAULT_DB.stat().st_mtime_ns if DEFAULT_DB.exists() else None
-    data = portfolio(revision)
     page = st.sidebar.radio("Analysis", PAGES)
-    as_of = st.sidebar.date_input("As-of date", AS_OF, min_value=START, max_value=AS_OF)
+    disclosure = ("Public market research and synthetic sensitivity"
+                  if page == "Market Intelligence" else "Synthetic Data — Educational Portfolio Demonstration")
+    st.caption(disclosure)
     st.header(page)
-    st.caption(f"As of {as_of:%d %b %Y} · Group reporting currency USD")
-
-    if page == "Market Intelligence":
-        show_market(data, as_of)
-        return
     if page == "Client & Product Strategy":
         show_product_strategy()
+        return
+
+    revision = DEFAULT_DB.stat().st_mtime_ns if DEFAULT_DB.exists() else None
+    data = portfolio(revision)
+    as_of = st.sidebar.date_input("Synthetic ledger as-of date", AS_OF, min_value=START, max_value=AS_OF)
+    st.caption(f"Synthetic ledger as of {as_of:%d %b %Y} · Group reporting currency USD")
+    if page == "Market Intelligence":
+        show_market(data, as_of)
         return
     balances = daily_balances(data, as_of)
     payments = payment_rows(data, as_of)

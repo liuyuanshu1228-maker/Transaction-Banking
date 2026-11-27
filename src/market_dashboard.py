@@ -30,8 +30,10 @@ def show_market(data, as_of):
     columns = st.columns(4)
     shifts = {c: col.slider(f"USD/{c} quote shock (bp)", -2000, 2000, 0) for c, col in zip(FX_CURRENCIES, columns)}
     rates = columns[-1].slider("USD interest-rate shock (bp)", -300, 300, 0)
-    delay = st.slider("Working-capital stress: receipt delay (calendar days)", 0, 15, 0)
-    base, stressed, interest = sensitivity(data, as_of, shifts, rates, receipt_delay=delay)
+    left, right = st.columns(2)
+    delay = left.slider("Working-capital stress: receipt delay (calendar days)", 0, 15, 0)
+    spread = right.slider("Additional supplier FX spread (bp)", 0, 150, 0)
+    base, stressed, interest = sensitivity(data, as_of, shifts, rates, receipt_delay=delay, spread_shock_bps=spread)
     labels = {"day30_cash_minor": "Day-30 group cash", "peak_funding_minor": "Peak same-day gross funding gap",
               "fx_cost_minor": "30-day supplier FX spread cost"}
     st.dataframe([{"Measure (USD)": label, "Baseline": base[key]/100, "Scenario": stressed[key]/100,
