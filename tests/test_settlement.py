@@ -39,7 +39,7 @@ def test_settlement_comparison_app_control():
     app = AppTest.from_file(Path(__file__).resolve().parents[1] / "app.py", default_timeout=30).run()
     app.radio[0].set_value("Payment Analytics").run()
     assert not app.exception
-    assert app.dataframe[2].value.iloc[0]["FX cost (SGD)"] == 0
-    app.selectbox[0].set_value("USD").run()
+    assert next(table.value for table in app.dataframe if "FX cost (SGD)" in table.value).iloc[0]["FX cost (SGD)"] == 0
+    next(box for box in app.selectbox if box.label == "Instruction currency").set_value("USD").run()
     assert not app.exception
-    assert app.dataframe[2].value.iloc[0]["FX cost (SGD)"] > 0
+    assert next(table.value for table in app.dataframe if "FX cost (SGD)" in table.value).iloc[0]["FX cost (SGD)"] > 0

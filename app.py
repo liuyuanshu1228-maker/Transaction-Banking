@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.controls import DECISIONS, control_cases, record_review, review_queue
 from src.data_generation import AS_OF, START
 from src.database import DEFAULT_DB, load
 from src.forecasting import compare, forecast
@@ -58,6 +59,29 @@ def show_forecast(base, alternate, label):
         st.success("All modeled account-day positions meet the operating buffers.")
 
 
+def show_control_review(receipts, as_of):
+    with st.expander("Educational KYC and payment exception review"):
+        st.caption("Fictional customer profiles and deterministic alerts. A flag prompts review; it establishes neither wrongdoing nor compliance.")
+        journal = st.session_state.setdefault("control_journal", {})
+        key = str(as_of)
+        events = journal.get(key, [])
+        queue = review_queue(control_cases(receipts), events)
+        if not queue:
+            st.info("No exceptions for this sample.")
+            return
+        pending = [case["case_id"] for case in queue if case["review_status"] == "Pending Review"]
+        if pending:
+            case_id = st.selectbox("Pending case", pending, key="control_case")
+            decision = st.selectbox("Review decision", DECISIONS, key="control_decision")
+            if st.button("Record review", key="record_control_review"):
+                journal[key] = record_review(queue, events, case_id, decision)
+                st.rerun()
+        st.dataframe(queue, hide_index=True)
+        if events:
+            st.dataframe(events, hide_index=True)
+        st.caption("The event journal lasts for the current Streamlit session. Review decisions leave posted cash unchanged.")
+
+
 def main():
     st.set_page_config(page_title="Corporate Treasury Analytics", layout="wide")
     st.caption("Synthetic Data — Educational Portfolio Demonstration")
@@ -101,6 +125,8 @@ def main():
                 "receipt_sgd": st.column_config.NumberColumn("Receipt (SGD)", format="%.2f"),
             })
             st.caption("Record and value rates exclude repeat feed records. Unique unmatched and missing references remain posted but unattributed.")
+
+        show_control_review(receipts, as_of)
 
         with st.expander("Hypothetical settlement comparison"):
             st.caption("Illustrative input assumptions only. These methods do not represent bank rails or service levels.")
