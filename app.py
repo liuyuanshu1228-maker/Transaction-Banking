@@ -123,6 +123,8 @@ def main():
                             "currency", "Instructed USD", "delay_days"]], hide_index=True)
 
     else:
+        if not any(row['known_on'] <= str(as_of) < row['due_on'] for row in data['scheduled']):
+            st.info('No scheduled cash flows were known at this date. The expected projection holds opening cash flat.')
         base = forecast(data, as_of)
         st.caption("30 calendar days · Known scheduled flows only · Matching as-of FX held flat · Unscheduled payments excluded")
         if page == PAGES[2]:

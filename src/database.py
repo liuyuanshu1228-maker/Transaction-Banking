@@ -3,7 +3,7 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
-from src.data_generation import DEFAULT_SEED, generate
+from src.data_generation import AS_OF, DEFAULT_SEED, generate
 
 DEFAULT_DB = Path("data/synthetic/treasury.sqlite")
 SCHEMA = """
@@ -23,6 +23,14 @@ CREATE TABLE scheduled(id INTEGER PRIMARY KEY, account TEXT REFERENCES accounts(
 CREATE TABLE transfers(id INTEGER PRIMARY KEY, day TEXT NOT NULL, source TEXT REFERENCES accounts(id),
     target TEXT REFERENCES accounts(id), amount_minor INTEGER NOT NULL CHECK(amount_minor > 0),
     CHECK(source <> target));
+CREATE TABLE daily_balances(
+    day TEXT, account TEXT REFERENCES accounts(id), currency TEXT NOT NULL,
+    opening_minor INTEGER NOT NULL, inflow_minor INTEGER NOT NULL, outflow_minor INTEGER NOT NULL,
+    fees_minor INTEGER NOT NULL, transfer_in_minor INTEGER NOT NULL, transfer_out_minor INTEGER NOT NULL,
+    closing_minor INTEGER NOT NULL, buffer_minor INTEGER NOT NULL, closing_usd_minor INTEGER NOT NULL,
+    PRIMARY KEY(day, account),
+    CHECK(closing_minor = opening_minor + inflow_minor - outflow_minor - fees_minor
+                          + transfer_in_minor - transfer_out_minor));
 """
 
 
@@ -43,21 +51,34 @@ def create_database(path=DEFAULT_DB, seed=DEFAULT_SEED):
     try:
         with closing(sqlite3.connect(path)) as connection:
             populate(connection, seed)
+            from src.treasury import daily_balances
+
+            rows = daily_balances(read_sources(connection), AS_OF)
+            with connection:
+                connection.executemany("""
+                    INSERT INTO daily_balances VALUES (:day, :account, :currency, :opening_minor,
+                    :inflow_minor, :outflow_minor, :fees_minor, :transfer_in_minor, :transfer_out_minor,
+                    :closing_minor, :buffer_minor, :closing_usd_minor)
+                """, rows)
     except Exception:
         path.unlink()
         raise
     return path
 
 
+def read_sources(connection):
+    connection.row_factory = sqlite3.Row
+    return {table: [dict(row) for row in connection.execute(f"SELECT * FROM {table} ORDER BY {order}")]
+            for table, order in (("accounts", "id"), ("fx", "day, currency"), ("payments", "id"),
+                                 ("cashflows", "id"), ("scheduled", "id"), ("transfers", "id"))}
+
+
 def load(path=None, seed=DEFAULT_SEED):
-    with closing(sqlite3.connect(":memory:" if path is None else Path(path).resolve().as_uri() + "?mode=ro",
-                                 uri=path is not None)) as connection:
+    uri = ":memory:" if path is None else Path(path).resolve().as_uri() + "?mode=ro"
+    with closing(sqlite3.connect(uri, uri=path is not None)) as connection:
         if path is None:
             populate(connection, seed)
-        connection.row_factory = sqlite3.Row
-        return {table: [dict(row) for row in connection.execute(f"SELECT * FROM {table} ORDER BY {order}")]
-                for table, order in (("accounts", "id"), ("fx", "day, currency"), ("payments", "id"),
-                                     ("cashflows", "id"), ("scheduled", "id"), ("transfers", "id"))}
+        return read_sources(connection)
 
 
 if __name__ == "__main__":

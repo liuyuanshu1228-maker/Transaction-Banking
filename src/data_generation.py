@@ -12,7 +12,7 @@ def generate(seed=DEFAULT_SEED):
     accounts = [
         ("HK", "Hong Kong", "HKD", 210_000_000, 120_000_000),
         ("CN", "Shanghai", "CNY", 150_000_000, 90_000_000),
-        ("SG", "Singapore", "SGD", 33_000_000, 21_000_000),
+        ("SG", "Singapore", "SGD", 33_000_000, 90_000_000),
     ]
     fx, payments, cashflows, scheduled, transfers = [], [], [], [], []
     for offset in range(HISTORY_DAYS):
@@ -31,7 +31,7 @@ def generate(seed=DEFAULT_SEED):
             payments.append((len(payments) + 1, account, day.isoformat(), instruction_currency,
                              amount, destination, status, outcome.isoformat() if outcome else None))
             cashflows.append((len(cashflows) + 1, account, day.isoformat(), rng.randint(8_300_000, 18_000_000)
-                              if currency != "SGD" else rng.randint(4_800_000, 10_000_000)))
+                              if currency != "SGD" else rng.randint(4_800_000, 10_000_000) * 53 // 100))
         if offset % 21 == 5:
             transfers.append((len(transfers) + 1, day.isoformat(), "HK", "SG", 3_000_000))
 

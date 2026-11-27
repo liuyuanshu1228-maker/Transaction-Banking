@@ -64,6 +64,8 @@ def compare(baseline, scenario):
     for row in scenario:
         base = lookup[row["day"], row["account"]]
         rows.append(dict(row, baseline_minor=base["closing_minor"],
+                         baseline_receipts_minor=base["receipts_minor"], baseline_suppliers_minor=base["suppliers_minor"],
+                         baseline_fees_minor=base["fees_minor"],
                          delta_minor=row["closing_minor"] - base["closing_minor"],
                          delta_usd_minor=row["closing_usd_minor"] - base["closing_usd_minor"]))
     return rows
