@@ -23,3 +23,9 @@
 - A breach occurs when closing cash is strictly below its local buffer. A shortfall is the local buffer less closing cash when breached. Group surplus can coexist with an account shortfall.
 
 Market pricing, payment routing, taxes, transfer eligibility, holidays, operational cutoffs and approvals are outside the simulation.
+
+## Payment product demonstrations
+
+- The virtual account feed reuses up to ten actual rows from the historical synthetic receipt table. Attribution uses static fictional identifiers. A recognized identifier must agree with the master account already credited. The first row for a bank reference is counted, and later duplicates are flagged. Posted totals include unique unmatched receipts, which remain unattributed.
+- In the settlement comparison, one outgoing instruction starts from the Singapore account close. FX conversion holds the as-of midpoint constant. The modeled debit equals local principal plus the assumed fixed fee and FX spread, all posted at settlement. Other flows, prefunding holds, actual eligibility, and settlement finality remain outside the comparison.
+- The exception review uses synthetic verification states and receipt-matching flags to illustrate manual review. The event journal is session-only. Review outcomes have no accounting effect.

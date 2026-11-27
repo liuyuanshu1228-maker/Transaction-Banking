@@ -13,3 +13,14 @@ The SQLite generator creates each table below. ISO dates use calendar-day granul
 | `daily_balances` | `day, account` | Materialized history with local opening, inflow, outflow, fees, both transfer legs, closing and buffer, plus translated closing USD |
 
 The app recomputes balances from source tables so the ledger and payment visibility use the selected as-of date. Payment detail adds corridor, local settled principal, fee components, dated USD equivalents and elapsed days. Scenario comparison includes expected movement components and scenario-minus-expected closing deltas in local currency and USD.
+
+## Derived demonstration records
+
+| Record | Fields |
+| --- | --- |
+| Virtual account mapping | Fictional identifier, master account ID, synthetic customer label |
+| Receipt attribution | Posting day, synthetic bank reference, posted account, virtual identifier, amount, attribution status and matched customer |
+| Settlement option | Assumed minutes and costs, local principal, balance before and after settlement, buffer shortfall and minute-by-minute event points |
+| Review event | Session-local sequence, case ID, previous status and selected decision |
+
+The demonstrations derive from or reference historical data. They add no postings or SQLite source tables.

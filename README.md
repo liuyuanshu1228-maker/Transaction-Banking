@@ -35,21 +35,31 @@ py -3 -m venv .venv
 
 The dashboard also runs from a deterministic in-memory SQLite database when the local database file is absent. The data command creates `data/synthetic/treasury.sqlite` and preserves any existing file. To generate another seed or copy, use `python -m src.database --seed 43 --output data/synthetic/alternate.sqlite` from an activated environment.
 
+## Global Payments Solutions portfolio review
+
+The [alignment review](docs/gps_alignment.md) maps the project to payment operations, liquidity, product fit and client communication. The portfolio uses synthetic records and illustrative pricing and service-time assumptions.
+
 ## Dashboard
 
 | Section | What to inspect |
 | --- | --- |
 | Executive Overview | Group and regional cash, cash buffers, 30-day external receipts, settled outflows and costs |
-| Payment Analytics | An instruction-date cohort with corridor filters, status rates, currency mix, fee components and settlement delay |
+| Payment Analytics | An instruction-date cohort with corridor filters, status rates, currency mix, fee components and settlement delay, plus virtual collections, settlement comparison and educational exception review |
 | Liquidity Forecast | Expected and conservative paths plus day-level account shortfalls and movement detail |
 | Scenario Lab | Receipt and supplier delays, an account-specific expense, additional bank fees and FX spread shock |
-| Business Recommendations | Triggered actions with evidence, potential impact, assumptions and decision limits |
+| Business Recommendations | Client executive summary for liquidity, collections, payment routing and cost, with evidence and decision limits |
 
 Open the Scenario Lab and increase receipt delay. The comparison shows exactly which receipts move and the effect on daily cash. For a specific account, read the local currency columns, then use the USD columns for group comparison.
 
+## Payment product demonstrations
+
+- **Virtual accounts.** Three demo identifiers map to master account SG. The latest ten posted Singapore receipts include missing and unknown identifiers plus a repeated bank reference. The dashboard shows both count and amount rates. The default sample matches eight of ten unique receipts.
+- **Settlement comparison.** Run an SGD or USD outgoing instruction against the same Singapore opening cash. Two hypothetical methods use one and 2,880 minutes, SGD 1 and SGD 6 fixed fees, and 20 and 35 bp spreads when the instruction needs FX. The chart shows when available cash falls and whether settlement puts it below the buffer.
+- **Exception review.** Review synthetic collection exceptions and incomplete fictional verification. Clear or escalate a case and inspect the session event log. The demonstration uses simple rules and has no external identity check.
+
 ## Reports and checks
 
-- [Excel treasury analysis](reports/treasury_analysis.xlsx) includes seven sheets with account, instruction, ledger, forecast and comparison detail.
+- [Excel treasury analysis](reports/treasury_analysis.xlsx) includes nine sheets with account, instruction, ledger, forecast, virtual receipt attribution and settlement options.
 - [Three-slide treasury briefing](reports/treasury_briefing.pptx) covers the business problem, calculated findings and actions.
 - [Model assumptions](docs/assumptions.md), [data dictionary](docs/data_dictionary.md) and [business case](docs/business_case.md) describe the calculations and controls.
 
@@ -69,6 +79,8 @@ src/data_generation.py + src/database.py
     -> src/payments.py + src/treasury.py
     -> src/forecasting.py + src/scenarios.py + src/recommendations.py
     -> app.py (Streamlit) + src/reporting.py (Excel and PowerPoint)
+src/virtual_accounts.py + src/settlement.py + src/controls.py
+    -> standalone product demonstrations using historical source data
 ```
 
 The ledger stores integer cents and FX conversion uses Decimal with half-up cent rounding. Realized settlement and reporting translations use dated midpoints. The forecast starts from historical closing cash and uses only schedules known as of that close. Account buffers use local currency. The group rollup translates each position to USD before summation.
@@ -83,6 +95,6 @@ The model uses calendar days, simplified fee schedules and fixed forecast FX. It
 
 - Built a Python, SQLite and Streamlit treasury analytics portfolio using 210 days of reproducible synthetic data across three APAC operating accounts.
 - Implemented settlement-date cash reconciliation, multi-currency USD rollups, and a 30-day liquidity stress model for timing, expense and pricing shocks.
-- Validated the financial engine and interactive dashboard with pytest and generated a seven-sheet Excel report and three-slide PowerPoint briefing from the same calculations.
+- Validated the financial engine and interactive dashboard with pytest and generated a nine-sheet Excel report and three-slide PowerPoint briefing from the same calculations.
 
 MIT License.

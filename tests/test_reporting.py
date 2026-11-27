@@ -19,6 +19,11 @@ def test_excel_export_reopens_and_matches_calculations(tmp_path):
         assert summary["Group closing cash"] == consolidate(daily_balances(data, AS_OF))[-1]["closing_usd_minor"]/100
         assert summary["Expected day-30 cash"] == consolidate(forecast(data, AS_OF))[-1]["closing_usd_minor"]/100
         assert list(book["Scenario Comparison"].values)[0][-1] == "Delta USD"
+        assert summary["Virtual receipts matched"] == .8
+        assert book["Virtual Account Receipts"].max_row == 12
+        methods = list(book["Settlement Options"].values)[1:]
+        assert [row[1] for row in methods] == [1, 2880]
+        assert [row[3] for row in methods] == [1, 6]
         book.close()
 
 
@@ -30,3 +35,5 @@ def test_powerpoint_export_contains_three_briefing_slides(tmp_path):
     assert all(DISCLOSURE in slide for slide in text)
     assert "Cash and payment performance" in text[1]
     assert any("funding transfer" in item for item in text[2])
+    assert any("80%" in item for item in text[1])
+    assert any("Assign identifiers" in item for item in text[2])

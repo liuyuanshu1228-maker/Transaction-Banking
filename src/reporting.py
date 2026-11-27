@@ -13,13 +13,15 @@ from src.database import load
 from src.forecasting import compare, forecast
 from src.payments import DOMESTIC_FIXED_MINOR, FX_SPREAD_BPS, WIRE_FEE_BPS, WIRE_FIXED_MINOR
 from src.payments import payment_metrics, payment_rows
-from src.recommendations import recommendations
+from src.recommendations import client_recommendations
 from src.scenarios import CONSERVATIVE
+from src.settlement import DEMO_PRINCIPAL_MINOR, compare_settlement
 from src.treasury import consolidate, daily_balances
+from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 DISCLOSURE = "Synthetic Data — Educational Portfolio Demonstration"
 SHEETS = ("Executive Summary", "Accounts", "Payments", "Daily Balances", "Liquidity Forecast",
-          "Scenario Comparison", "Assumptions")
+          "Scenario Comparison", "Virtual Account Receipts", "Settlement Options", "Assumptions")
 NAVY = "152741"
 TEAL = "087F8C"
 SLATE = "466079"
@@ -87,8 +89,11 @@ def deck_slide(deck, title):
     return slide
 
 
-def write_deck(path, as_of, balances, metrics, baseline, stress, actions):
+def write_deck(path, as_of, balances, metrics, baseline, stress, collections, actions):
     deck = Presentation()
+    deck.core_properties.title = "Corporate Treasury Briefing"
+    deck.core_properties.comments = DISCLOSURE
+    deck.core_properties.last_modified_by = ""
     deck.slide_width = Inches(13.333)
     deck.slide_height = Inches(7.5)
     slide = deck_slide(deck, "Corporate cash & cross-border payment analytics")
@@ -109,10 +114,12 @@ def write_deck(path, as_of, balances, metrics, baseline, stress, actions):
     stressed_end = consolidate(stress)[-1]["closing_usd_minor"]
     breaches = sum(row["breach"] for row in stress)
     for y, label, value, detail in (
-        (1.7, "Group cash", f"USD {latest/100:,.0f}", "Historical closing balance at dated FX midpoint"),
-        (2.87, "Settled rate", f"{metrics['settled_rate']:.1%}", f"Of {metrics['count']:,} payment instructions"),
-        (4.04, "Settled payment cost", f"USD {metrics['fees_usd_minor']/100:,.0f}", "Fixed fees, variable fees and FX spread"),
-        (5.21, "Day-30 stress impact", f"USD {(stressed_end-end)/100:+,.0f}", f"Versus expected closing cash · {breaches} breached account-days under stress"),
+        (1.63, "Group cash", f"USD {latest/100:,.0f}", "Historical closing balance at dated FX midpoint"),
+        (2.61, "Settled rate", f"{metrics['settled_rate']:.1%}", f"Of {metrics['count']:,} payment instructions"),
+        (3.59, "Settled payment cost", f"USD {metrics['fees_usd_minor']/100:,.0f}", "Fixed fees, variable fees and FX spread"),
+        (4.57, "Day-30 stress impact", f"USD {(stressed_end-end)/100:+,.0f}", f"Versus expected closing cash · {breaches} breached account-days under stress"),
+        (5.65, "Receipt attribution", f"{collections['match_rate']:.0%}",
+         f"{collections['matched']} of {collections['unique_receipts']} unique Singapore receipts matched"),
     ):
         text(slide, .72, y, 3.02, .65, label, 19, bold=True)
         text(slide, 3.85, y - .03, 3.1, .65, value, 25, TEAL, True)
@@ -140,9 +147,14 @@ def export_reports(output=Path("reports"), data=None, as_of=AS_OF):
     baseline = forecast(data, as_of)
     stress = forecast(data, as_of, CONSERVATIVE)
     metrics = payment_metrics(payments)
-    actions = recommendations(payments, stress)
+    mappings, receipts = demo_receipts(data, as_of)
+    collections = reconciliation_summary(receipts)
+    settlement = compare_settlement(data, as_of, DEMO_PRINCIPAL_MINOR, "SGD", balances=balances)
+    actions = client_recommendations(payments, stress, collections, settlement)
     latest = consolidate(balances)[-1]["closing_usd_minor"]
     book = Workbook()
+    book.properties.creator = ""
+    book.properties.title = "Corporate Treasury Analysis"
     book.active.title = SHEETS[0]
     for name in SHEETS[1:]:
         book.create_sheet(name)
@@ -159,13 +171,24 @@ def export_reports(output=Path("reports"), data=None, as_of=AS_OF):
         ("Expected day-30 cash", consolidate(baseline)[-1]["closing_usd_minor"]/100, "USD, frozen reporting-date FX"),
         ("Conservative day-30 cash", consolidate(stress)[-1]["closing_usd_minor"]/100, "USD, frozen reporting-date FX"),
         ("Conservative breaches", sum(r["breach"] for r in stress), "Account-days"),
+        ("Virtual receipts matched", collections["match_rate"], "Share of unique records in synthetic SG sample"),
+        ("Virtual receipt value matched", collections["value_rate"], "Share of unique posted SGD value"),
+        ("Duplicate receipt records", collections["duplicates"], "Excluded from attribution denominators"),
     ]
-    write_table(book[SHEETS[0]], ["Metric", "Value", "Unit or definition"], summary, percents={5, 6, 7})
+    write_table(book[SHEETS[0]], ["Metric", "Value", "Unit or definition"], summary, percents={5, 6, 7, 14, 15})
     for name, rows in zip(SHEETS[1:6], (data["accounts"], payments, balances, baseline, compare(baseline, stress))):
         if rows:
             write_records(book[name], rows)
         else:
             write_table(book[name], ["Status"], [("No rows in this reporting window.",)])
+    customer_by_id = {row["virtual_account"]: row["customer"] for row in mappings}
+    receipt_rows = [{key: value for key, value in row.items() if key != "receipt_sgd"} for row in receipts]
+    for row in receipt_rows:
+        row["configured_customer"] = customer_by_id.get(row["virtual_account"])
+    if receipt_rows:
+        write_records(book["Virtual Account Receipts"], receipt_rows)
+    write_records(book["Settlement Options"],
+                  [{key: value for key, value in row.items() if key != "timeline"} for row in settlement])
     assumptions = [
         ("Disclosure", DISCLOSURE),
         ("Amount units", "Major currency units. USD fields are explicitly marked."),
@@ -176,13 +199,15 @@ def export_reports(output=Path("reports"), data=None, as_of=AS_OF):
         ("Bank fee", f"{DOMESTIC_FIXED_MINOR/100:g} domestic or {WIRE_FIXED_MINOR/100:g} + {WIRE_FEE_BPS} bp cross-border."),
         ("FX spread", f"{FX_SPREAD_BPS} bp on account-currency equivalent when currencies differ."),
         ("Conservative case", "Receipts +5 days, SGD 15,000 expense on day 7, fees +10 bp, FX spread +25 bp."),
+        ("Virtual account receipts", "Latest ten posted Singapore receipts with synthetic attribution; duplicate feed rows add no cash."),
+        ("Settlement comparison", "SGD 200,000 outgoing example; illustrative timing, fee and buffer results in SGD."),
         ("Local account money", "Round half up to cents. Translated amounts can differ by a cent from aggregate conversions."),
     ]
     write_table(book[SHEETS[-1]], ["Assumption", "Treatment"], assumptions)
     workbook = output / "treasury_analysis.xlsx"
     slides = output / "treasury_briefing.pptx"
     book.save(workbook)
-    write_deck(slides, as_of, balances, metrics, baseline, stress, actions)
+    write_deck(slides, as_of, balances, metrics, baseline, stress, collections, actions)
     return workbook, slides
 
 
