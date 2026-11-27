@@ -11,6 +11,7 @@ from src.payments import payment_metrics, payment_rows
 from src.recommendations import recommendations
 from src.scenarios import CONSERVATIVE, Scenario
 from src.treasury import consolidate, daily_balances
+from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 PAGES = ("Executive Overview", "Payment Analytics", "Liquidity Forecast", "Scenario Lab",
          "Business Recommendations")
@@ -86,6 +87,20 @@ def main():
         st.caption("External flow totals exclude intercompany transfers. Historical FX uses each day’s midpoint.")
 
     elif page == PAGES[1]:
+        with st.expander("Virtual account collections"):
+            st.caption("Synthetic attribution of the latest Singapore receipts. Cash was already posted to master account SG.")
+            mappings, receipts = demo_receipts(data, as_of)
+            summary = reconciliation_summary(receipts)
+            metrics([("Matched receipt records", f"{summary['match_rate']:.1%}"),
+                     ("Reconciled SGD value", f"{summary['value_rate']:.1%}"),
+                     ("Duplicate feed records", summary["duplicates"])])
+            st.dataframe(mappings, hide_index=True)
+            st.dataframe(receipts, hide_index=True, column_config={
+                "amount_minor": None,
+                "receipt_sgd": st.column_config.NumberColumn("Receipt (SGD)", format="%.2f"),
+            })
+            st.caption("Record and value rates exclude repeat feed records. Unique unmatched and missing references remain posted but unattributed.")
+
         begin = finish = as_of
         if as_of != START:
             selection = st.date_input("Instruction date range", (max(START, as_of - timedelta(days=29)), as_of),
