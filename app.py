@@ -10,6 +10,7 @@ from src.database import DEFAULT_DB, load
 from src.forecasting import compare, forecast
 from src.market_dashboard import show_market
 from src.payments import payment_metrics, payment_rows
+from src.product_dashboard import show_product_strategy
 from src.recommendations import client_recommendations
 from src.scenarios import CONSERVATIVE, Scenario
 from src.settlement import DEMO_PRINCIPAL_MINOR, compare_settlement
@@ -17,7 +18,7 @@ from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 PAGES = ("Executive Overview", "Payment Analytics", "Liquidity Forecast", "Scenario Lab",
-         "Business Recommendations", "Market Intelligence")
+         "Business Recommendations", "Market Intelligence", "Client & Product Strategy")
 COLORS = ["#087f8c", "#304a80", "#d06735", "#7458a5"]
 
 
@@ -96,6 +97,9 @@ def main():
 
     if page == "Market Intelligence":
         show_market(data, as_of)
+        return
+    if page == "Client & Product Strategy":
+        show_product_strategy()
         return
     balances = daily_balances(data, as_of)
     payments = payment_rows(data, as_of)
