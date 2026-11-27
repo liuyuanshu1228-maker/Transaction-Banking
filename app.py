@@ -8,9 +8,9 @@ from src.data_generation import AS_OF, START
 from src.database import DEFAULT_DB, load
 from src.forecasting import compare, forecast
 from src.payments import payment_metrics, payment_rows
-from src.recommendations import recommendations
+from src.recommendations import client_recommendations
 from src.scenarios import CONSERVATIVE, Scenario
-from src.settlement import compare_settlement
+from src.settlement import DEMO_PRINCIPAL_MINOR, compare_settlement
 from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
@@ -106,7 +106,7 @@ def main():
             st.caption("Illustrative input assumptions only. These methods do not represent bank rails or service levels.")
             currency = st.selectbox("Instruction currency", ["SGD", "USD"])
             amount = st.number_input(f"Outgoing principal ({currency})", min_value=1, max_value=10_000_000,
-                                     value=200_000, step=1000)
+                                     value=DEMO_PRINCIPAL_MINOR // 100, step=1000)
             comparison = compare_settlement(data, as_of, amount * 100, currency, balances=balances)
             st.dataframe([{"Method": row["method"], "Settlement (minutes)": row["delay_min"],
                            "Principal (SGD)": row["principal_minor"] / 100,
@@ -189,13 +189,19 @@ def main():
             st.dataframe(compare(base, shocked), hide_index=True)
             st.caption("Compare opening cash, receipts, supplier principal, fees, expense and closing deltas in integer cents.")
         else:
-            result = recommendations(payments, forecast(data, as_of, CONSERVATIVE))
-            if not result:
-                st.info("No recommendations triggered by the available data.")
-            for row in result:
-                with st.expander(row["problem"], expanded=True):
-                    for key in ("evidence", "action", "impact", "assumptions", "limitations"):
-                        st.markdown(f"**{key.title()}** — {row[key]}")
+            st.subheader("Executive summary")
+            st.caption("Fictional APAC corporate treasury · Decision brief for collections, payments and liquidity")
+            _, receipts = demo_receipts(data, as_of)
+            rail = compare_settlement(data, as_of, DEMO_PRINCIPAL_MINOR, "SGD", balances=balances)
+            result = client_recommendations(payments, forecast(data, as_of, CONSERVATIVE),
+                                            reconciliation_summary(receipts), rail)
+            for index, row in enumerate(result):
+                with st.expander(row["solution"], expanded=index < 2):
+                    st.markdown(f"**Client problem** — {row['problem']}")
+                    st.markdown(f"**Supporting evidence** — {row['evidence']}")
+                    st.markdown(f"**Proposed action** — {row['action']}")
+                    st.markdown(f"**Illustrative impact** — {row['impact']}")
+                    st.caption(f"Assumptions · {row['assumptions']} Limitations · {row['limitations']}")
 
 
 if __name__ == "__main__":

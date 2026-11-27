@@ -3,6 +3,8 @@
 from src.payments import bps, convert, rate_index
 from src.treasury import daily_balances
 
+DEMO_PRINCIPAL_MINOR = 20_000_000
+
 # Method, calendar minutes, SGD fixed fee in cents, and cross-currency spread in bp.
 METHODS = (("Hypothetical real-time", 1, 100, 20), ("Hypothetical conventional", 2880, 600, 35))
 
