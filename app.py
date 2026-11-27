@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.client_dashboard import show_client_solutions
 from src.controls import DECISIONS, control_cases, record_review, review_queue
 from src.data_generation import AS_OF, START
 from src.database import DEFAULT_DB, load
@@ -19,7 +20,7 @@ from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 PAGES = ("Executive Overview", "Payment Analytics", "Liquidity Forecast", "Scenario Lab",
-         "Business Recommendations", "Market Intelligence", "Client & Product Strategy", "Market & Industry Intelligence")
+         "Business Recommendations", "Market Intelligence", "Client & Product Strategy", "Market & Industry Intelligence", "Client Solutions")
 COLORS = ["#087f8c", "#304a80", "#d06735", "#7458a5"]
 
 
@@ -106,6 +107,9 @@ def main():
         return
     if page == "Market & Industry Intelligence":
         show_industry(data, as_of)
+        return
+    if page == "Client Solutions":
+        show_client_solutions(data, as_of)
         return
     balances = daily_balances(data, as_of)
     payments = payment_rows(data, as_of)
