@@ -8,7 +8,7 @@ from src.treasury import daily_balances
 HORIZON = 30
 
 
-def forecast(data, as_of, scenario=BASELINE):
+def forecast(data, as_of, scenario=BASELINE, *, forecast_rates=None):
     as_of = date.fromisoformat(str(as_of))
     first = as_of + timedelta(days=1)
     last = as_of + timedelta(days=HORIZON)
@@ -19,8 +19,8 @@ def forecast(data, as_of, scenario=BASELINE):
         raise ValueError("Forecast as-of date must have historical closing balances.")
     if scenario.expense_minor and scenario.expense_account not in accounts:
         raise ValueError("Expense account must exist.")
-    rates = rate_index(data["fx"])
-    moves = defaultdict(lambda: dict(receipts_minor=0, suppliers_minor=0, fees_minor=0, expense_minor=0))
+    rates = rate_index(data["fx"]) if forecast_rates is None else forecast_rates
+    moves = defaultdict(lambda: dict(receipts_minor=0, suppliers_minor=0, fees_minor=0, fx_cost_minor=0, expense_minor=0))
     for row in data["scheduled"]:
         original_due = date.fromisoformat(row["due_on"])
         if row["known_on"] > str(as_of) or original_due <= as_of:
@@ -39,7 +39,9 @@ def forecast(data, as_of, scenario=BASELINE):
         else:
             foreign = row["currency"] != currency
             move["suppliers_minor"] += amount
-            move["fees_minor"] += sum(charges(amount, foreign, foreign, scenario.fee_bps, scenario.spread_bps))
+            fees = charges(amount, foreign, foreign, scenario.fee_bps, scenario.spread_bps)
+            move["fees_minor"] += sum(fees)
+            move["fx_cost_minor"] += fees[2]
     if scenario.expense_minor:
         moves[as_of + timedelta(days=scenario.expense_day), scenario.expense_account]["expense_minor"] += scenario.expense_minor
 

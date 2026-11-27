@@ -8,6 +8,7 @@ from src.controls import DECISIONS, control_cases, record_review, review_queue
 from src.data_generation import AS_OF, START
 from src.database import DEFAULT_DB, load
 from src.forecasting import compare, forecast
+from src.market_dashboard import show_market
 from src.payments import payment_metrics, payment_rows
 from src.recommendations import client_recommendations
 from src.scenarios import CONSERVATIVE, Scenario
@@ -16,7 +17,7 @@ from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 PAGES = ("Executive Overview", "Payment Analytics", "Liquidity Forecast", "Scenario Lab",
-         "Business Recommendations")
+         "Business Recommendations", "Market Intelligence")
 COLORS = ["#087f8c", "#304a80", "#d06735", "#7458a5"]
 
 
@@ -92,6 +93,10 @@ def main():
     as_of = st.sidebar.date_input("As-of date", AS_OF, min_value=START, max_value=AS_OF)
     st.header(page)
     st.caption(f"As of {as_of:%d %b %Y} · Group reporting currency USD")
+
+    if page == "Market Intelligence":
+        show_market(data, as_of)
+        return
     balances = daily_balances(data, as_of)
     payments = payment_rows(data, as_of)
 

@@ -1,0 +1,16 @@
+series,observed_on,published_on,frequency,unit,value,source_url
+Fed target midpoint,2024-09-18,2024-09-18,Selected policy meetings,Percent per year,4.875,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm
+Fed target midpoint,2024-12-18,2024-12-18,Selected policy meetings,Percent per year,4.375,https://www.federalreserve.gov/newsevents/pressreleases/monetary20241218a.htm
+Fed target midpoint,2025-06-18,2025-06-18,Selected policy meetings,Percent per year,4.375,https://www.federalreserve.gov/newsevents/pressreleases/monetary20250618a.htm
+USD/CNY,2025-01-24,2025-01-27,Daily (selected Fridays),CNY per USD,7.2440,https://www.federalreserve.gov/releases/h10/20250127/
+USD/HKD,2025-01-24,2025-01-27,Daily (selected Fridays),HKD per USD,7.7878,https://www.federalreserve.gov/releases/h10/20250127/
+USD/SGD,2025-01-24,2025-01-27,Daily (selected Fridays),SGD per USD,1.3448,https://www.federalreserve.gov/releases/h10/20250127/
+USD/CNY,2025-04-25,2025-04-28,Daily (selected Fridays),CNY per USD,7.2864,https://www.federalreserve.gov/releases/h10/20250428/
+USD/HKD,2025-04-25,2025-04-28,Daily (selected Fridays),HKD per USD,7.7568,https://www.federalreserve.gov/releases/h10/20250428/
+USD/SGD,2025-04-25,2025-04-28,Daily (selected Fridays),SGD per USD,1.3140,https://www.federalreserve.gov/releases/h10/20250428/
+USD/CNY,2025-07-25,2025-07-28,Daily (selected Fridays),CNY per USD,7.1679,https://www.federalreserve.gov/releases/h10/20250728/
+USD/HKD,2025-07-25,2025-07-28,Daily (selected Fridays),HKD per USD,7.8498,https://www.federalreserve.gov/releases/h10/20250728/
+USD/SGD,2025-07-25,2025-07-28,Daily (selected Fridays),SGD per USD,1.2813,https://www.federalreserve.gov/releases/h10/20250728/
+Wholesale credits within one business day,2024,2024-10-21,Annual report,Percent of measured payments,92,https://www.fsb.org/2024/10/annual-progress-report-on-meeting-the-targets-for-cross-border-payments-2024-report-on-key-performance-indicators/
+Wholesale credits within one business day,2025,2025-10-09,Annual report,Percent of measured payments,93.2,https://www.fsb.org/uploads/P091025-1.pdf
+Wholesale credits within one business day,2026,2026-11-16,Annual report,Percent of measured payments,93.9,https://www.fsb.org/2026/11/g20-roadmap-for-enhancing-cross-border-payments-consolidated-progress-report-for-2026/
