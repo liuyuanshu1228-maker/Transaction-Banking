@@ -25,6 +25,10 @@ def show_market(data, as_of):
     for name, statement, first, last in observations_summary(records):
         st.markdown(f"**{name}** · {statement} [Start]({first}) · [End]({last})")
 
+    show_macro_sensitivity(data, as_of)
+
+
+def show_macro_sensitivity(data, as_of):
     st.subheader("Synthetic 30-day macro sensitivity")
     st.caption("Positive FX shocks mean more local currency per USD. The charts above are research context.")
     columns = st.columns(4)

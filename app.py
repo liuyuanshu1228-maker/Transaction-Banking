@@ -9,6 +9,7 @@ from src.data_generation import AS_OF, START
 from src.database import DEFAULT_DB, load
 from src.forecasting import compare, forecast
 from src.market_dashboard import show_market
+from src.industry_dashboard import show_industry
 from src.payments import payment_metrics, payment_rows
 from src.product_dashboard import show_product_strategy
 from src.recommendations import client_recommendations
@@ -18,7 +19,7 @@ from src.treasury import consolidate, daily_balances
 from src.virtual_accounts import demo_receipts, reconciliation_summary
 
 PAGES = ("Executive Overview", "Payment Analytics", "Liquidity Forecast", "Scenario Lab",
-         "Business Recommendations", "Market Intelligence", "Client & Product Strategy")
+         "Business Recommendations", "Market Intelligence", "Client & Product Strategy", "Market & Industry Intelligence")
 COLORS = ["#087f8c", "#304a80", "#d06735", "#7458a5"]
 
 
@@ -89,7 +90,7 @@ def main():
     st.title("Corporate Cash & Cross-Border Payments Analytics")
     page = st.sidebar.radio("Analysis", PAGES)
     disclosure = ("Public market research and synthetic sensitivity"
-                  if page == "Market Intelligence" else "Synthetic Data — Educational Portfolio Demonstration")
+                  if page in ("Market Intelligence", "Market & Industry Intelligence") else "Synthetic Data — Educational Portfolio Demonstration")
     st.caption(disclosure)
     st.header(page)
     if page == "Client & Product Strategy":
@@ -102,6 +103,9 @@ def main():
     st.caption(f"Synthetic ledger as of {as_of:%d %b %Y} · Group reporting currency USD")
     if page == "Market Intelligence":
         show_market(data, as_of)
+        return
+    if page == "Market & Industry Intelligence":
+        show_industry(data, as_of)
         return
     balances = daily_balances(data, as_of)
     payments = payment_rows(data, as_of)
